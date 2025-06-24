@@ -49,7 +49,13 @@ use const DATE_ATOM;
 
 class ModelTest extends TestCase
 {
-    public function tearDown(): void
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Carbon::setTestNow();
+    }
+
+    protected function tearDown(): void
     {
         Carbon::setTestNow();
         DB::connection('mongodb')->getCollection('users')->drop();
@@ -83,12 +89,24 @@ class ModelTest extends TestCase
         $this->assertEquals('users.name', $sqlUser->qualifyColumn('name'));
     }
 
+    private function makeUser(array $overrides = []): User
+    {
+        $defaults = [
+            'name'  => 'John Doe',
+            'title' => 'admin',
+            'age'   => 35,
+        ];
+
+        $user = new User();
+        foreach (array_merge($defaults, $overrides) as $key => $value) {
+            $user->$key = $value;
+        }
+        return $user;
+    }
+
     public function testInsert(): void
     {
-        $user        = new User();
-        $user->name  = 'John Doe';
-        $user->title = 'admin';
-        $user->age   = 35;
+        $user = $this->makeUser();
 
         $user->save();
 
@@ -130,10 +148,7 @@ class ModelTest extends TestCase
 
     public function testUpdate(): void
     {
-        $user        = new User();
-        $user->name  = 'John Doe';
-        $user->title = 'admin';
-        $user->age   = 35;
+        $user = $this->makeUser();
         $user->save();
 
         $raw = $user->getAttributes();
@@ -264,10 +279,7 @@ class ModelTest extends TestCase
 
     public function testDelete(): void
     {
-        $user        = new User();
-        $user->name  = 'John Doe';
-        $user->title = 'admin';
-        $user->age   = 35;
+        $user = $this->makeUser();
         $user->save();
 
         $this->assertTrue($user->exists);
@@ -280,10 +292,7 @@ class ModelTest extends TestCase
 
     public function testAll(): void
     {
-        $user        = new User();
-        $user->name  = 'John Doe';
-        $user->title = 'admin';
-        $user->age   = 35;
+        $user = $this->makeUser();
         $user->save();
 
         $user        = new User();
@@ -301,10 +310,7 @@ class ModelTest extends TestCase
 
     public function testFind(): void
     {
-        $user        = new User();
-        $user->name  = 'John Doe';
-        $user->title = 'admin';
-        $user->age   = 35;
+        $user = $this->makeUser();
         $user->save();
 
         $check = User::find($user->id);
@@ -384,10 +390,7 @@ class ModelTest extends TestCase
 
     public function testDestroy(): void
     {
-        $user        = new User();
-        $user->name  = 'John Doe';
-        $user->title = 'admin';
-        $user->age   = 35;
+        $user = $this->makeUser();
         $user->save();
 
         User::destroy((string) $user->id);
@@ -397,10 +400,7 @@ class ModelTest extends TestCase
 
     public function testTouch(): void
     {
-        $user        = new User();
-        $user->name  = 'John Doe';
-        $user->title = 'admin';
-        $user->age   = 35;
+        $user = $this->makeUser();
         $user->save();
 
         $old = $user->updated_at;
@@ -1089,7 +1089,7 @@ class ModelTest extends TestCase
         $this->assertEquals(['fork', 'spork', 'spoon'], $names);
     }
 
-    public function testTruncateModel()
+    public function testTruncateModel(): void
     {
         User::create(['name' => 'John Doe']);
 
@@ -1098,7 +1098,7 @@ class ModelTest extends TestCase
         $this->assertEquals(0, User::count());
     }
 
-    public function testGuardedModel()
+    public function testGuardedModel(): void
     {
         $model = new Guarded();
 
