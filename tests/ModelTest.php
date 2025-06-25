@@ -52,6 +52,7 @@ class ModelTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
         Carbon::setTestNow();
     }
 
@@ -89,26 +90,21 @@ class ModelTest extends TestCase
         $this->assertEquals('users.name', $sqlUser->qualifyColumn('name'));
     }
 
-    private function makeUser(array $overrides = []): User
+    private function makeUser(): User
     {
-        $defaults = [
-            'name'  => 'John Doe',
-            'title' => 'admin',
-            'age'   => 35,
-        ];
-
         $user = new User();
-        foreach (array_merge($defaults, $overrides) as $key => $value) {
-            $user->$key = $value;
-        }
+        $user->name  = 'John Doe';
+        $user->title = 'admin';
+        $user->age   = 35;
+
+        $user->save();
+
         return $user;
     }
 
     public function testInsert(): void
     {
         $user = $this->makeUser();
-
-        $user->save();
 
         $this->assertTrue($user->exists);
         $this->assertEquals(1, User::count());
@@ -149,7 +145,6 @@ class ModelTest extends TestCase
     public function testUpdate(): void
     {
         $user = $this->makeUser();
-        $user->save();
 
         $raw = $user->getAttributes();
         $this->assertInstanceOf(ObjectID::class, $raw['id']);
@@ -280,7 +275,6 @@ class ModelTest extends TestCase
     public function testDelete(): void
     {
         $user = $this->makeUser();
-        $user->save();
 
         $this->assertTrue($user->exists);
         $this->assertEquals(1, User::count());
@@ -293,7 +287,6 @@ class ModelTest extends TestCase
     public function testAll(): void
     {
         $user = $this->makeUser();
-        $user->save();
 
         $user        = new User();
         $user->name  = 'Jane Doe';
@@ -311,7 +304,6 @@ class ModelTest extends TestCase
     public function testFind(): void
     {
         $user = $this->makeUser();
-        $user->save();
 
         $check = User::find($user->id);
         $this->assertInstanceOf(User::class, $check);
@@ -391,7 +383,6 @@ class ModelTest extends TestCase
     public function testDestroy(): void
     {
         $user = $this->makeUser();
-        $user->save();
 
         User::destroy((string) $user->id);
 
@@ -401,7 +392,6 @@ class ModelTest extends TestCase
     public function testTouch(): void
     {
         $user = $this->makeUser();
-        $user->save();
 
         $old = $user->updated_at;
         sleep(1);
