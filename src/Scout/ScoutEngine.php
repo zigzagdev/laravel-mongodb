@@ -69,8 +69,8 @@ final class ScoutEngine extends Engine
 
     /** @param array<string, array> $indexDefinitions */
     public function __construct(
-        private Database $database,
-        private bool $softDelete,
+        private readonly Database $database,
+        private readonly bool $softDelete,
         private array $indexDefinitions = [],
     ) {
     }

@@ -149,9 +149,9 @@ class AtlasSearchTest extends TestCase
     /** Generates random vectors using fixed seed to make tests deterministic */
     private function addVector(array $items): array
     {
-        srand(1);
+        mt_srand(1);
         foreach ($items as &$item) {
-            $this->vectors[] = $item['vector4'] = array_map(fn () => rand() / mt_getrandmax(), range(0, 3));
+            $this->vectors[] = $item['vector4'] = array_map(fn () => random_int(0, mt_getrandmax()) / mt_getrandmax(), range(0, 3));
         }
 
         return $items;

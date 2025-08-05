@@ -18,7 +18,7 @@ final class CommandSubscriber implements CommandSubscriberInterface
     /** @var array<string, CommandStartedEvent> */
     private array $commands = [];
 
-    public function __construct(private Connection $connection)
+    public function __construct(private readonly Connection $connection)
     {
     }
 
