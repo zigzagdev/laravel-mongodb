@@ -6,6 +6,7 @@ use Rector\Php74\Rector\Closure\ClosureToArrowFunctionRector;
 use Rector\Php80\Rector\FunctionLike\MixedTypeRector;
 use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\TypeDeclaration\Rector\Closure\AddClosureVoidReturnTypeWhereNoReturnRector;
+use Rector\Php84\Rector\Param\ExplicitNullableParamTypeRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -16,6 +17,9 @@ return RectorConfig::configure()
     ])
     ->withPhpSets()
     ->withTypeCoverageLevel(0)
+    ->withRules([
+        ExplicitNullableParamTypeRector::class,
+    ])
     ->withSkip([
         RemoveExtraParametersRector::class,
         ClosureToArrowFunctionRector::class,
