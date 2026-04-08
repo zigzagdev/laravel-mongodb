@@ -471,7 +471,7 @@ trait HybridRelations
             $relatedPivotKey,
             $parentKey,
             $relatedKey,
-            $relatedKey,
+            $relation,
             true,
         );
     }
