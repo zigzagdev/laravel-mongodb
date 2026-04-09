@@ -199,6 +199,25 @@ class MongoCacheStoreTest extends TestCase
 
         $this->insertToCacheTable('foo', 10, -5);
         $this->assertFalse($store->increment('foo', 5));
+
+        $doc = DB::connection('mongodb')
+            ->getCollection($this->getCacheCollectionName())
+            ->findOne(
+                ['_id' => $this->withCachePrefix('foo')],
+                ['projection' => ['value' => 1]],
+            );
+        $this->assertSame(10, $doc['value']);
+
+        // decrement on an expired entry must also return false and leave the value unchanged
+        $this->assertFalse($store->decrement('foo', 5));
+
+        $doc = DB::connection('mongodb')
+            ->getCollection($this->getCacheCollectionName())
+            ->findOne(
+                ['_id' => $this->withCachePrefix('foo')],
+                ['projection' => ['value' => 1]],
+            );
+        $this->assertSame(10, $doc['value']);
     }
 
     public function testTouchReturnsFalseWhenKeyDoesNotExist()
