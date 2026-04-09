@@ -40,6 +40,7 @@ use function func_get_args;
 use function in_array;
 use function is_array;
 use function is_numeric;
+use function is_object;
 use function is_string;
 use function ltrim;
 use function method_exists;
@@ -375,6 +376,10 @@ trait DocumentModel
         if ($this->hasCast($key, static::$primitiveCastTypes)) {
             return $this->castAttribute($key, $attribute) ===
                 $this->castAttribute($key, $original);
+        }
+
+        if ($this->isClassCastable($key)) {
+            return ! is_object($attribute) ? $attribute === $original : $attribute == $original;
         }
 
         return is_numeric($attribute) && is_numeric($original)
