@@ -7,6 +7,11 @@ namespace MongoDB\Laravel\Tests\Models;
 use MongoDB\Laravel\Eloquent\Casts\BinaryUuid;
 use MongoDB\Laravel\Eloquent\Model;
 
+/**
+ * @property mixed $id
+ * @property array $arrayValue
+ * @property object $objectValue
+ */
 class Casting extends Model
 {
     protected $connection = 'mongodb';
@@ -36,6 +41,7 @@ class Casting extends Model
         'encryptedArray',
         'encryptedObject',
         'encryptedCollection',
+        'arrayValue',
     ];
 
     protected $casts = [
@@ -60,5 +66,6 @@ class Casting extends Model
         'encryptedArray' => 'encrypted:array',
         'encryptedObject' => 'encrypted:object',
         'encryptedCollection' => 'encrypted:collection',
+        'arrayValue' => 'array',
     ];
 }

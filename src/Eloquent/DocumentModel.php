@@ -49,7 +49,10 @@ use function str_contains;
 use function str_starts_with;
 use function strcmp;
 use function strlen;
+use function trigger_error;
 use function var_export;
+
+use const E_USER_DEPRECATED;
 
 /** @mixin Builder */
 trait DocumentModel
@@ -268,6 +271,23 @@ trait DocumentModel
         return parent::setAttribute($key, $value);
     }
 
+    /** @inheritdoc */
+    protected function isJsonCastable($key)
+    {
+        if ($this->hasCast($key, ['array'])) {
+            trigger_error(
+                sprintf(
+                    'The "array" cast on attribute "%s" of model "%s" stores values as a JSON-encoded string in MongoDB, which is not the native format. Remove the cast to store native BSON arrays. If you must keep JSON string storage, use the "json" cast explicitly.',
+                    $key,
+                    static::class,
+                ),
+                E_USER_DEPRECATED,
+            );
+        }
+
+        return parent::isJsonCastable($key);
+    }
+
     /**
      * @param mixed $value
      *
@@ -287,6 +307,15 @@ trait DocumentModel
         }
 
         return parent::asDecimal($value, $decimals);
+    }
+
+    public function fromJson($value, $asObject = false)
+    {
+        if (is_array($value)) {
+            return $asObject ? (object) $value : $value;
+        }
+
+        return parent::fromJson($value, $asObject);
     }
 
     /**
