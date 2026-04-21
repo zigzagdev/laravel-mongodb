@@ -28,7 +28,7 @@ trait EmbedsRelations
      *
      * @return EmbedsMany
      */
-    protected function embedsMany($related, $localKey = null, $foreignKey = null, $relation = null)
+    public function embedsMany($related, $localKey = null, $foreignKey = null, $relation = null)
     {
         // If no relation name was given, we will use this debug backtrace to extract
         // the calling method's name and use that as the relationship name as most
@@ -53,7 +53,7 @@ trait EmbedsRelations
     }
 
     /**
-     * Define an embedded one-to-many relationship.
+     * Define an embedded one-to-one relationship.
      *
      * @param class-string $related
      * @param string|null  $localKey
@@ -62,7 +62,7 @@ trait EmbedsRelations
      *
      * @return EmbedsOne
      */
-    protected function embedsOne($related, $localKey = null, $foreignKey = null, $relation = null)
+    public function embedsOne($related, $localKey = null, $foreignKey = null, $relation = null)
     {
         // If no relation name was given, we will use this debug backtrace to extract
         // the calling method's name and use that as the relationship name as most
