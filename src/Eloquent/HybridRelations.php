@@ -149,8 +149,6 @@ trait HybridRelations
         // get the table and create the relationship instances for the developers.
         [$type, $id] = $this->getMorphs($name, $type, $id);
 
-        $table = $instance->getTable();
-
         $localKey = $localKey ?: $this->getKeyName();
 
         return new MorphMany($instance->newQuery(), $this, $type, $id, $localKey);
