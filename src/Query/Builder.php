@@ -29,6 +29,7 @@ use MongoDB\Driver\ReadPreference;
 use MongoDB\Laravel\Connection;
 use Override;
 use RuntimeException;
+use SortDirection;
 use TypeError;
 
 use function array_fill_keys;
@@ -656,18 +657,18 @@ class Builder extends BaseBuilder
     }
 
     /**
-     * @param int|string|array $direction
+     * @param SortDirection|int|string|array $direction
      *
      * @inheritdoc
      */
     #[Override]
     public function orderBy($column, $direction = 'asc')
     {
-        if (is_string($direction)) {
+        if (is_string($direction) || $direction instanceof SortDirection) {
             $direction = match ($direction) {
-                'asc', 'ASC' => 1,
-                'desc', 'DESC' => -1,
-                default => throw new InvalidArgumentException('Order direction must be "asc" or "desc".'),
+                'asc', 'ASC', SortDirection::Ascending => 1,
+                'desc', 'DESC', SortDirection::Descending => -1,
+                default => throw new InvalidArgumentException('Order direction must be "asc", "desc" or a case from the SortDirection enum.'),
             };
         }
 

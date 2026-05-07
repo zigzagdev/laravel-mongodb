@@ -21,6 +21,7 @@ use MongoDB\Laravel\Query\Grammar;
 use MongoDB\Laravel\Query\Processor;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use SortDirection;
 use stdClass;
 
 use function collect;
@@ -564,6 +565,21 @@ class BuilderTest extends TestCase
         yield 'orderByDesc' => [
             ['find' => [[], ['sort' => ['email' => -1]]]],
             fn (Builder $builder) => $builder->orderByDesc('email'),
+        ];
+
+        yield 'orderBy SortDirection::Ascending' => [
+            ['find' => [[], ['sort' => ['email' => 1]]]],
+            fn (Builder $builder) => $builder->orderBy('email', SortDirection::Ascending),
+        ];
+
+        yield 'orderBy SortDirection::Descending' => [
+            ['find' => [[], ['sort' => ['email' => -1]]]],
+            fn (Builder $builder) => $builder->orderBy('email', SortDirection::Descending),
+        ];
+
+        yield 'orderBy SortDirection on natural' => [
+            ['find' => [[], ['sort' => ['$natural' => -1]]]],
+            fn (Builder $builder) => $builder->orderBy('natural', SortDirection::Descending),
         ];
 
         /** @see DatabaseQueryBuilderTest::testReorder() */
@@ -1487,7 +1503,7 @@ class BuilderTest extends TestCase
     {
         yield 'orderBy invalid direction' => [
             InvalidArgumentException::class,
-            'Order direction must be "asc" or "desc"',
+            'Order direction must be "asc", "desc" or a case from the SortDirection enum.',
             fn (Builder $builder) => $builder->orderBy('_id', 'dasc'),
         ];
 
