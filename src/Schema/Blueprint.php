@@ -12,7 +12,6 @@ use Override;
 use function array_flip;
 use function array_merge;
 use function implode;
-use function in_array;
 use function is_array;
 use function is_int;
 use function is_string;
@@ -207,10 +206,6 @@ class Blueprint extends BaseBlueprint
     {
         $indexOrColumns = $this->transformColumns($indexOrColumns);
         foreach ($this->collection->listIndexes() as $index) {
-            if (is_array($indexOrColumns) && in_array($index->getName(), $indexOrColumns)) {
-                return true;
-            }
-
             if (is_string($indexOrColumns) && $index->getName() === $indexOrColumns) {
                 return true;
             }
