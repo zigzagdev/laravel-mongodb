@@ -272,6 +272,9 @@ class SchemaTest extends TestCase
             $collection->index(['field_a', 'field_b']);
             $this->assertTrue($collection->hasIndex(['field_a_1_field_b']));
             $this->assertFalse($collection->hasIndex(['field_a_1_field_b_1']));
+            // Natural multi-column array input is transformed to the composite index name
+            $this->assertTrue($collection->hasIndex(['field_a', 'field_b']));
+            $this->assertFalse($collection->hasIndex(['field_a', 'field_c']));
         });
     }
 
