@@ -138,4 +138,40 @@ class DatetimeTest extends TestCase
         $model->update(['immutableDatetimeWithFormatField' => null]);
         $this->assertNull($model->immutableDatetimeWithFormatField);
     }
+
+    public function testMultipleDatetimeFormatsDoNotInterfere(): void
+    {
+        $model = Casting::query()->create([
+            'datetimeWithFormatField' => now(),
+            'datetimeWithAnotherFormatField' => now(),
+        ]);
+
+        // Access the second format first (Y-m-d\TH:i:s)
+        self::assertEquals(now()->format('Y-m-d\TH:i:s'), (string) $model->datetimeWithAnotherFormatField);
+
+        // Access the first format after — it must retain its own format (j.n.Y H:i),
+        // not be affected by the previous access.
+        self::assertEquals(now()->format('j.n.Y H:i'), (string) $model->datetimeWithFormatField);
+
+        // Access in reverse order to verify neither direction causes interference.
+        $model->refresh();
+        self::assertEquals(now()->format('j.n.Y H:i'), (string) $model->datetimeWithFormatField);
+        self::assertEquals(now()->format('Y-m-d\TH:i:s'), (string) $model->datetimeWithAnotherFormatField);
+    }
+
+    public function testCustomFormatDoesNotContaminateDefaultDatetimeFormat(): void
+    {
+        $model = Casting::query()->create([
+            'datetimeWithAnotherFormatField' => now(),
+            'datetimeField' => now(),
+        ]);
+
+        // Access the custom-format attribute first — with the old buggy code this would
+        // mutate the model-wide $dateFormat to 'Y-m-d\TH:i:s' as a side effect.
+        self::assertEquals(now()->format('Y-m-d\TH:i:s'), (string) $model->datetimeWithAnotherFormatField);
+
+        // The plain 'datetime' cast must use the default format 'Y-m-d H:i:s', not the
+        // format leaked by the previous attribute access.
+        self::assertEquals(now()->format('Y-m-d H:i:s'), (string) $model->datetimeField);
+    }
 }
