@@ -854,6 +854,10 @@ class Builder extends BaseBuilder
                 }
             }
 
+            if ($filter === []) {
+                throw new InvalidArgumentException('The upsert unique fields must be present in the values.');
+            }
+
             $bulk[] = ['updateOne' => [$filter, $operation, ['upsert' => true]]];
         }
 
