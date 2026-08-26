@@ -11,6 +11,7 @@ use MongoDB\Laravel\Connection;
 use MongoDB\Model\CollectionInfo;
 use MongoDB\Model\IndexInfo;
 use Override;
+use RuntimeException;
 
 use function array_column;
 use function array_fill_keys;
@@ -43,6 +44,9 @@ use const E_USER_DEPRECATED;
 /** @property Connection $connection */
 class Builder extends \Illuminate\Database\Schema\Builder
 {
+    /** Namespace probed by ensureVectorExtensionExists(); never created or written to. */
+    private const ATLAS_SEARCH_PROBE_COLLECTION = '__laravel_mongodb_ensure_vector_extension_probe__';
+
     /**
      * Check if column exists in the collection schema.
      *
@@ -380,6 +384,32 @@ class Builder extends \Illuminate\Database\Schema\Builder
         }
 
         return $collections;
+    }
+
+    /**
+     * Verify that Atlas Search is available on the current connection.
+     *
+     * MongoDB has no equivalent to Postgres extensions: vector indexes are
+     * powered by Atlas Search, a managed feature of MongoDB Atlas. This
+     * probes for it instead of creating anything.
+     *
+     * @param string|null $schema Unused, MongoDB has no equivalent concept.
+     *
+     * @throws RuntimeException if Atlas Search is not available.
+     */
+    #[Override]
+    public function ensureVectorExtensionExists($schema = null): void
+    {
+        try {
+            $this->connection->getCollection(self::ATLAS_SEARCH_PROBE_COLLECTION)
+                ->listSearchIndexes(['name' => 'just_for_testing']);
+        } catch (ServerException $exception) {
+            if (self::isAtlasSearchNotSupportedException($exception)) {
+                throw new RuntimeException('Atlas Search is not available on this connection. Vector indexes require a MongoDB Atlas cluster.', previous: $exception);
+            }
+
+            throw $exception;
+        }
     }
 
     /** @internal */
