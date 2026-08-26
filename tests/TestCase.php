@@ -79,4 +79,19 @@ class TestCase extends OrchestraTestCase
             throw $e;
         }
     }
+
+    public function skipIfSearchIndexManagementIsSupported(): void
+    {
+        try {
+            $this->getConnection('mongodb')->getCollection('test')->listSearchIndexes(['name' => 'just_for_testing']);
+        } catch (ServerException $e) {
+            if (Builder::isAtlasSearchNotSupportedException($e)) {
+                return;
+            }
+
+            throw $e;
+        }
+
+        self::markTestSkipped('Search index management is supported on this server');
+    }
 }

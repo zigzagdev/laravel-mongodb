@@ -12,6 +12,7 @@ use MongoDB\Collection;
 use MongoDB\Database;
 use MongoDB\Laravel\Schema\Blueprint;
 use MongoDB\Model\IndexInfo;
+use RuntimeException;
 
 use function assert;
 use function collect;
@@ -702,6 +703,25 @@ class SchemaTest extends TestCase
 
         $index = $this->getSearchIndex(self::COLL_1, 'vector');
         self::assertNull($index);
+    }
+
+    public function testEnsureVectorExtensionExists(): void
+    {
+        $this->skipIfSearchIndexManagementIsNotSupported();
+
+        Schema::ensureVectorExtensionExists();
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testEnsureVectorExtensionExistsThrowsWhenAtlasSearchIsNotAvailable(): void
+    {
+        $this->skipIfSearchIndexManagementIsSupported();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Atlas Search is not available on this connection.');
+
+        Schema::ensureVectorExtensionExists();
     }
 
     protected function assertIndexExists(string $collection, string $name): IndexInfo
