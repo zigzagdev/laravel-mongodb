@@ -7,6 +7,7 @@ namespace MongoDB\Laravel\Encryption;
 use InvalidArgumentException;
 use LogicException;
 use MongoDB\BSON\Binary;
+use MongoDB\Client;
 use MongoDB\Driver\ClientEncryption;
 use MongoDB\Driver\Exception\RuntimeException;
 use MongoDB\Driver\Manager;
@@ -433,7 +434,7 @@ final class AutoEncryption
         return $encryptedFieldsMap;
     }
 
-    private function findDataKeyByAltName(string $keyAltName, ?Manager $manager = null): ?Binary
+    private function findDataKeyByAltName(string $keyAltName): ?Binary
     {
         $namespace = $this->connection()->getConfig('driver_options.autoEncryption.keyVaultNamespace');
 
@@ -442,7 +443,7 @@ final class AutoEncryption
         }
 
         $query = new DriverQuery(['keyAltNames' => $keyAltName]);
-        $cursor = ($manager ?? $this->plainManager())->executeQuery($namespace, $query);
+        $cursor = $this->keyVaultClient()->executeQuery($namespace, $query);
 
         foreach ($cursor as $document) {
             $id = $document->_id ?? null;
@@ -452,6 +453,21 @@ final class AutoEncryption
         }
 
         return null;
+    }
+
+    /**
+     * The client holding the key vault: the configured one, as used by
+     * ClientEncryption to create the data keys, or the plain manager.
+     */
+    private function keyVaultClient(): Manager
+    {
+        $keyVaultClient = $this->connection()->getConfig('driver_options.autoEncryption.keyVaultClient');
+
+        return match (true) {
+            $keyVaultClient instanceof Manager => $keyVaultClient,
+            $keyVaultClient instanceof Client => $keyVaultClient->getManager(),
+            default => $this->plainManager(),
+        };
     }
 
     private function plainManager(): Manager
