@@ -8,6 +8,10 @@ use InvalidArgumentException;
 use MongoDB\Driver\ClientEncryption;
 use MongoDB\Driver\Exception\RuntimeException;
 use MongoDB\Driver\Manager;
+use MongoDB\Driver\Monitoring\CommandFailedEvent;
+use MongoDB\Driver\Monitoring\CommandStartedEvent;
+use MongoDB\Driver\Monitoring\CommandSubscriber;
+use MongoDB\Driver\Monitoring\CommandSucceededEvent;
 use MongoDB\Laravel\Connection;
 use MongoDB\Laravel\Encryption\AutoEncryption;
 use ReflectionMethod;
@@ -294,6 +298,56 @@ class ConnectionAutoEncryptionTest extends TestCase
         $first  = $connection->resolveOrCreateEncryptionKeys($map('tests:idempotent'));
         $second = $connection->resolveOrCreateEncryptionKeys($map('tests:idempotent'));
 
+        $this->assertSame(
+            $first['patients']['fields'][0]['keyId']->getData(),
+            $second['patients']['fields'][0]['keyId']->getData(),
+        );
+    }
+
+    public function testResolveOrCreateEncryptionKeysLooksUpKeysInConfiguredKeyVaultClient(): void
+    {
+        $keyVaultClient = new Manager(env('MONGODB_URI', 'mongodb://127.0.0.1/'));
+
+        $connection = new Connection($this->encryptionConfig([
+            'keyVaultNamespace' => self::KEY_VAULT,
+            'kmsProviders' => $this->localKmsProviders(),
+            'extraOptions' => $this->extraOptions(),
+            'keyVaultClient' => $keyVaultClient,
+        ]));
+
+        $map = ['patients' => ['fields' => [['path' => 'ssn', 'bsonType' => 'string', 'keyAltName' => 'tests:key-vault-client']]]];
+
+        // The data keys are created through the configured key vault client,
+        // so they must be looked up there, not on the connection's server.
+        $subscriber = new class implements CommandSubscriber {
+            /** @var list<string> */
+            public array $finds = [];
+
+            public function commandStarted(CommandStartedEvent $event): void
+            {
+                if ($event->getCommandName() === 'find') {
+                    $this->finds[] = $event->getDatabaseName() . '.' . $event->getCommand()->find;
+                }
+            }
+
+            public function commandFailed(CommandFailedEvent $event): void
+            {
+            }
+
+            public function commandSucceeded(CommandSucceededEvent $event): void
+            {
+            }
+        };
+
+        $keyVaultClient->addSubscriber($subscriber);
+        try {
+            $first  = $connection->resolveOrCreateEncryptionKeys($map);
+            $second = $connection->resolveOrCreateEncryptionKeys($map);
+        } finally {
+            $keyVaultClient->removeSubscriber($subscriber);
+        }
+
+        $this->assertContains(self::KEY_VAULT, $subscriber->finds);
         $this->assertSame(
             $first['patients']['fields'][0]['keyId']->getData(),
             $second['patients']['fields'][0]['keyId']->getData(),
